@@ -1,35 +1,35 @@
+var images = [];
 document.addEventListener(
 	'DOMContentLoaded',
 	function() {
 		var checkPageButton = document.getElementById('img-download');
-		checkPageButton.addEventListener(
-			'click',
+
+		checkPageButton.addEventListener('click',
 			function() {
-				function modifyDOM() {
-					//You can play with your DOM here or check URL against your regex
-					return document.body.innerHTML;
-				}
-				chrome.tabs.executeScript(
-					{
-						code: '(' + modifyDOM + ')();' //argument here is a string but function.toString() returns function's code
-					},
-					(results) => {
-						//Here we have just the innerHTML and not DOM structure
-						console.log('Popup script:');
-						console.log(results[0]);
-						var dom_nodes = $($.parseHTML(results[0]));
-						dom_nodes.find('img.FFVAD').each(function(item) {
-							const srcset = $(this).attr('srcset'),
-								srcs = srcset.split(','),
-								src640 = srcs[srcs.length - 1].replace(' 640w', '');
-							console.log('sending message');
-							chrome.runtime.sendMessage(src640);
-						});
-					}
-				);
+				console.log('clicked');
+				chrome.tabs.query({active: true}, function(tabs) {
+					var tab = tabs[0];
+					tab_title = tab.title;
+					chrome.tabs.executeScript(tab.id, {
+					  code: 'window.images'
+					}, function(res){
+					
+						chrome.runtime.sendMessage(res[0]|| [])
+					});
+				})
+			
 			},
 			false
 		);
 	},
 	false
 );
+
+chrome.tabs.query({ active: true }, function(tabs) {
+	chrome.tabs.executeScript(null, { file: 'jquery-3.5.1.min.js' }, function() {
+		chrome.tabs.executeScript(null, { file: 'content.js' });
+		chrome.tabs.executeScript(null, { file: 'task.js' },function(result){
+			console.log("res",result)
+		});
+	});
+});
